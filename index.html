@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Skydiving draw generator">
+    <meta name="author" content="Andrew Vladelshchikov">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoCards - Country Flashcards</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="stylesheet.css">
+</head>
+<body>
+
+
+<!--Content-->
+<header>
+    <div id="logo">Geo<span>Cards</span></div>
+    <div id="tagline">Country Knowledge Trainer</div>
+</header>
+
+<div id="modeBar">
+    <button class="active" data-mode="flag">🏳 Flag</button>
+    <button data-mode="name">✏ Name</button>
+    <button data-mode="capital" title="Coming soon" disabled>🏛 Capitals</button>
+    <button data-mode="population" title="Coming soon" disabled>👥 Population</button>
+</div>
+
+<div id="statsBar">
+    <div class="stat">
+        <label>Card</label>
+        <p id="statCard">—</p>
+    </div>
+    <div class="stat">
+        <label>Correct</label>
+        <p class="good" id="statCorrect">0</p>
+    </div>
+    <div class="stat">
+        <label>Wrong</label>
+        <p class="bad" id="statWrong">0</p>
+    </div>
+    <div class="stat">
+        <label>Streak</label>
+        <p id="statStreak">0</p>
+    </div>
+    <div class="stat" id="progressContainer">
+        <label>Progress</label>
+        <div id="progressBar"><div id="progressFill"></div></div>
+    </div>
+</div>
+
+<div id="arena">
+    <div id="loadingMessage">Fetching countries…</div>
+</div>
+
+
+<!--Scripts-->
+<script>
+    // Initialize stats
+    const correct = document.getElementById('statCorrect');
+    const wrong = document.getElementById('statWrong');
+    const streak = document.getElementById('statStreak');
+    const progress = document.getElementById('statCard');
+    const getIndex = () => +correct.textContent + +wrong.textContent;
+
+    // Initialize state
+    let mode = 'flag';
+    let countries = []; // Unmodified deck
+    let deck = []; // Shuffled and appended deck
+    let flipped = false;
+</script>
+<!--Define deck-->
+<script>
+    function newDeck() {
+        deck = [...countries].sort(() => 0.5 - Math.random()); // TODO: Use a real shuffle
+
+        correct.textContent = '0';
+        wrong.textContent = '0';
+        streak.textContent = '0';
+        progress.textContent = `1 / ${deck.length}`;
+        document.getElementById('progressFill').style.width = '0%';
+
+        nextCard();
+    }
+</script>
+<!--Load country data-->
+<script>
+    async function loadCountries() {
+        const res = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion');
+        countries = await res.json();
+        newDeck();
+    }
+
+    loadCountries().catch(() => {
+        document.getElementById('arena').innerHTML = `<p id="errorMessage">Failed to load countries. Check your connection.</p>`;
+    });
+</script>
+<script>
+    // Constants that get swapped between
+    const frontFlipInfo = '↩ Flip to reveal answer';
+    const backFlipInfo = '↩ Flip back';
+
+    const frontActionBar = `<button id="flip" onclick="flipCard()">Reveal Answer</button>`;
+    const backActionBar = `<button id="wrong" onclick="grade(false)">✗ Wrong</button><button id="correct" onclick="grade(true)">✓ Correct</button>`;
+    const restartActionBar = `<button id="restart" onclick="newDeck()">↺ New Session</button>`;
+
+    const frontKeyboardHints = `<span class="key">Space</span>flip`;
+    const backKeyboardHints = frontKeyboardHints + `<span class="key">←</span>wrong<span class="key">→</span>correct`;
+
+    const flagModeQuestion = `<div class="cardLabel">What country is this?</div>`;
+    const nameModeQuestion = `<div class="cardLabel">Find the flag for:</div>`;
+</script>
+<!--Flip card-->
+<script>
+    function flipCard() {
+        flipped = !flipped;
+        document.getElementById('cardContainer').classList.toggle('flipped', flipped);
+
+        // Update info, action bar, and keyboard hints
+        document.getElementById('flipInfo').textContent = flipped ? backFlipInfo : frontFlipInfo;
+        document.getElementById('actionBar').innerHTML = flipped ? backActionBar : frontActionBar;
+        document.getElementById('keyboardHints').innerHTML = flipped ? backKeyboardHints : frontKeyboardHints;
+    }
+</script>
+<!--Create card-->
+<script>
+    const arena = document.getElementById('arena');
+
+    function nextCard() {
+        if (getIndex() >= deck.length) { finish(); return; }
+
+        flipped = false;
+        progress.textContent = `${getIndex() + 1} / ${deck.length}`;
+        document.getElementById('progressFill').style.width = `${getIndex() / deck.length * 100}%`;
+
+        const {
+            name :{common},
+            flags: {png},
+            region,
+            subregion,
+        } = deck[getIndex()];
+
+        const faceCard = (() => {
+            switch (mode) {
+                case 'flag': return flagModeQuestion + `<img src="${png}" alt="Country Flag">`;
+                case 'name': return nameModeQuestion + `<h1>${common}</h1>`;
+            }})();
+
+        arena.innerHTML = `
+            <div id="card">
+                <div id="cardContainer">
+                    <div class="cardFace front">
+                        <div class="cardNum">${progress.textContent}</div>
+                        ${faceCard}
+                    </div>
+                    <div class="cardFace back">
+                        <div class="cardNum">${progress.textContent}</div>
+                        <div class="cardLabel">Answer</div>
+                        <img src="${png}" alt="Country Flag">
+                        <h1 id="countryName">${common}</h1>
+                        <p>${region}${subregion ? ' · ' + subregion : ''}</p>
+                    </div>
+                </div>
+            </div>
+            <p id="flipInfo" onclick="flipCard()">${frontFlipInfo}</p>
+            <div id="actionBar">${frontActionBar}</div>
+            <p id="keyboardHints">${frontKeyboardHints}</p>
+        `;
+    }
+</script>
+<!--Finish game-->
+<script>
+    function finish() {
+        const pct = Math.round(correct.textContent / deck.length * 100);
+
+        const message = (() => {
+            switch (true) {
+                case pct === 100: return `Perfect score!`;
+                case pct >= 80:   return `Impressive!`;
+                case pct >= 60:   return `Nice try!`;
+                default:          return `Keep at it!`;
+            }})();
+
+        progress.textContent = '✓';
+        document.getElementById('progressFill').style.width = '100%';
+        arena.innerHTML = `
+            <div id="done">
+                <div class="label">Session Complete</div>
+                <div id="score">${pct}%</div>
+                <div class="label">${correct.textContent} correct · ${wrong.textContent} wrong</div>
+                <div id="message">${message}</div>
+                <div id="actionBar">${restartActionBar}</div>
+            </div>
+        `;
+    }
+</script>
+<!--Grade card-->
+<script>
+    function grade(value) {
+        if (value) {
+            correct.textContent++;
+            streak.textContent++;
+        } else {
+            deck.push(deck[getIndex()]);
+            wrong.textContent++;
+            streak.textContent = '0';
+        }
+
+        nextCard();
+    }
+</script>
+<!--Switch mode buttons-->
+<script>
+    const modeButtons = document.querySelectorAll('#modeBar button:not(:disabled)');
+
+    for (const button of modeButtons) {
+        button.addEventListener('click', () => {
+            if (button.classList.contains('active')) return;
+
+            modeButtons.forEach(otherButton => otherButton.classList.remove('active'));
+            button.classList.add('active');
+
+            mode = button.dataset.mode;
+            newDeck();
+        });
+    }
+</script>
+<!--Keybindings-->
+<script>
+    document.addEventListener('keydown', e => {
+        if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+        if (flipped) {
+            if (e.code === 'ArrowRight') grade(true);
+            if (e.code === 'ArrowLeft') grade(false);
+        }
+    });
+</script>
+<noscript>To use this tool, please enable JavaScript.</noscript>
+
+</body>
+</html>
