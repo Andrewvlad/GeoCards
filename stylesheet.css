@@ -24,6 +24,12 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+
+    /* Disable all highlighting/selection */
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 body {
@@ -244,7 +250,11 @@ header {
     }
 }
 
-/* Flag images */
+/* Prevent dragging of images */
+img {
+    pointer-events: none;
+}
+
 .cardFace.front {
     img {
         max-height: 55%;
@@ -291,6 +301,30 @@ header {
         font-size: 0.7rem;
         color: var(--muted);
         text-align: center;
+    }
+}
+/* Swipe overlays */
+.correctOverlay {
+    border: 2px solid var(--success);
+
+    &::before {
+        content: "";
+        position: absolute;
+        width: 100%; height: 100%;
+        opacity: 0.25;
+        background: linear-gradient(135deg, var(--success), var(--card));
+    }
+}
+
+.wrongOverlay {
+    border: 2px solid var(--error);
+
+    &::before {
+        content: "";
+        position: absolute;
+        width: 100%; height: 100%;
+        opacity: 0.25;
+        background: linear-gradient(135deg, var(--error), var(--card));
     }
 }
 

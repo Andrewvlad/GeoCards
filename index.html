@@ -84,15 +84,13 @@
 </script>
 <!--Load country data-->
 <script>
-    async function loadCountries() {
-        const res = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion');
-        countries = await res.json();
-        newDeck();
-    }
-
-    loadCountries().catch(() => {
-        document.getElementById('arena').innerHTML = `<p id="errorMessage">Failed to load countries. Check your connection.</p>`;
-    });
+    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion')
+        .then(response => response.json())
+        .then(json => countries = json)
+        .then(() => newDeck())
+        .catch(() => document.getElementById('arena').innerHTML =
+            `<p id="errorMessage">Failed to load countries. Check your connection.</p>`
+        );
 </script>
 <script>
     // Constants that get swapped between
@@ -126,7 +124,7 @@
     const arena = document.getElementById('arena');
 
     function nextCard() {
-        if (getIndex() >= deck.length) { finish(); return; }
+        if (getIndex() >= deck.length) return finish();
 
         flipped = false;
         progress.textContent = `${getIndex() + 1} / ${deck.length}`;
@@ -146,7 +144,7 @@
             }})();
 
         arena.innerHTML = `
-            <div id="card" onclick="flipCard()">
+            <div id="card">
                 <div id="cardContainer">
                     <div class="cardFace front">
                         <div class="cardNum">${progress.textContent}</div>
@@ -165,6 +163,8 @@
             <div id="actionBar">${frontActionBar}</div>
             <p id="keyboardHints">${frontKeyboardHints}</p>
         `;
+
+        attachSwipe();
     }
 </script>
 <!--Finish game-->
@@ -227,12 +227,106 @@
 <!--Keybindings-->
 <script>
     document.addEventListener('keydown', e => {
-        if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+        if (e.code === 'Space') {e.preventDefault(); flipCard();}
         if (flipped) {
             if (e.code === 'ArrowRight') grade(true);
             if (e.code === 'ArrowLeft') grade(false);
         }
     });
+</script>
+<!--Swipe / Drag gestures (only active when card is flipped)-->
+<script>
+    // TODO: Switch thresholds to be relative to window size (alongside Math.min())
+    const THRESHOLD = 120; // How many pixels of translation before swipe can be released
+    const SWIPE_THRESHOLD = 20; // How many pixels of translation before considered a swipe
+    const MAX_ROT = 20; // Max degrees of card rotation
+    const OVERLAY_THRESHOLD = THRESHOLD * 0.8; // When the overlay should appear
+    const SWIPE_DURATION = 300; // Number of milliseconds that the swipe animation will play
+
+    function attachSwipe() {
+        const container = document.getElementById('cardContainer');
+        const back = document.querySelector('.back');
+
+        let startX, startY, curX = 0;
+        let isDragging = false;
+
+        function setOverlay(side) {
+            back.classList.toggle('correctOverlay', side === 'correct');
+            back.classList.toggle('wrongOverlay',   side === 'wrong');
+        }
+
+        const pos = (e) => ({clientX: x, clientY: y} = e.touches?.[0] ?? e)
+
+        function onStart(e) {
+            if (!flipped) return;
+
+            curX = 0;
+            isDragging = false;
+            ({x: startX, y: startY} = pos(e));
+
+            container.style.transition = 'none'; // Prevents lag when dragging the element
+
+            // Start tracking movement
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('touchmove', onMove, {passive: false});
+            document.addEventListener('mouseup',   onEnd);
+            document.addEventListener('touchend',  onEnd);
+        }
+
+        function onMove(e) {
+            const changeX = pos(e).x - startX;
+            const changeY = pos(e).y - startY;
+
+            // Abort if scrolling vertically
+            if (!isDragging && Math.abs(changeY) > SWIPE_THRESHOLD) return cleanup();
+
+            if (Math.abs(changeX) > SWIPE_THRESHOLD) isDragging = true;
+            if (!isDragging) return;
+
+            e.preventDefault();
+            curX = changeX;
+            const rot = (changeX / window.innerWidth) * MAX_ROT * 0.5; // 0.5x so it keeps rotating after release
+            // Card follows behind cursor at 0.5x
+            container.style.transform = `rotateY(180deg) translateX(${-changeX * 0.5}px) rotate(${-rot}deg)`;
+            setOverlay(changeX > OVERLAY_THRESHOLD ? 'correct' : changeX < -OVERLAY_THRESHOLD ? 'wrong' : null);
+        }
+
+        function onEnd() {
+            cleanup();
+
+            if (Math.abs(curX) >= THRESHOLD) {
+                // Stop any further interactions
+                container.removeEventListener('mousedown',  onStart);
+                container.removeEventListener('touchstart', onStart);
+
+                const goRight = curX > 0;
+                const flyX = (goRight ? 0.75 : -0.75) * window.innerWidth;
+                const rot  = goRight ? MAX_ROT : -MAX_ROT;
+                container.style.transform  = `rotateY(180deg) translateX(${-flyX}px) rotate(${-rot}deg)`;
+                setTimeout(() => grade(goRight), SWIPE_DURATION);
+            } else {
+                setOverlay();
+                container.style.transform = ''; // Reset position
+            }
+        }
+
+        function cleanup() {
+            container.style.transition = ''; // Remove "none" transition
+
+            // Release listeners
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('mouseup',   onEnd);
+            document.removeEventListener('touchend',  onEnd);
+        }
+
+        // Add listeners
+        container.addEventListener('mousedown',  onStart);
+        container.addEventListener('touchstart', onStart, {passive: true}); // Mobile scrolling takes priority
+        container.addEventListener('click', () => {
+            if (!flipped || !curX) return flipCard(); // Always flip if on front, or while not being dragged
+        });
+    }
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
 
