@@ -255,14 +255,17 @@
             back.classList.toggle('wrongOverlay',   side === 'wrong');
         }
 
-        const pos = (e) => ({clientX: x, clientY: y} = e.touches?.[0] ?? e)
+        const pos = (e, calcOffset = false) => {
+            const p = e.touches?.[0] ?? e;
+            return calcOffset ? [p.clientX - startX, p.clientY - startY] : [p.clientX, p.clientY];
+        };
 
         function onStart(e) {
             if (!flipped) return;
 
             curX = 0;
             isDragging = false;
-            ({x: startX, y: startY} = pos(e));
+            [startX, startY] = pos(e);
 
             container.style.transition = 'none'; // Prevents lag when dragging the element
 
@@ -274,8 +277,7 @@
         }
 
         function onMove(e) {
-            const changeX = pos(e).x - startX;
-            const changeY = pos(e).y - startY;
+            const [changeX, changeY] = pos(e, true);
 
             // Abort if scrolling vertically
             if (!isDragging && Math.abs(changeY) > SWIPE_THRESHOLD) return cleanup();
