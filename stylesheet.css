@@ -219,6 +219,7 @@ header {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
+    outline: 1px solid transparent; /* Smoothes out edges when card moving */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -238,6 +239,7 @@ header {
         text-transform: uppercase;
         letter-spacing: 0.15em;
         color: var(--muted);
+        margin-bottom: 0.5rem;
     }
 
     .cardNum {
@@ -247,6 +249,7 @@ header {
         font-family: var(--primaryFont);
         font-size: 0.6rem;
         color: var(--muted);
+        margin-bottom: 0.5rem;
     }
 }
 
@@ -267,7 +270,7 @@ img {
     h1 {
         font-family: var(--titleFont);
         font-size: clamp(1.6rem, 5vw, 3rem);
-        font-weight: 700;
+        font-weight: bold;
         text-align: center;
         padding: 1rem 2rem;
         line-height: 1.2;
@@ -281,8 +284,10 @@ img {
     gap: 0.5rem;
 
     img {
-        margin-top: 20px; /* Prevent image from bleeding into text */
-        height: 100px;
+        margin-top: 2.5rem; /* Spacing for the card labels */
+        min-height: 0;
+        max-height: 55%;
+        max-width: 80%;
         object-fit: contain;
         border-radius: 4px;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -290,13 +295,15 @@ img {
     }
 
     h1 {
+        margin-top: 0.25rem;
         font-family: var(--titleFont);
         font-size: clamp(1.2rem, 4vw, 2rem);
-        font-weight: 700;
+        font-weight: bold;
         text-align: center;
     }
 
     p {
+        margin-bottom: 1.5rem;
         font-family: var(--primaryFont);
         font-size: 0.7rem;
         color: var(--muted);
@@ -305,7 +312,7 @@ img {
 }
 /* Swipe overlays */
 .correctOverlay {
-    border: 2px solid var(--success);
+    border-color: var(--success);
 
     &::before {
         content: "";
@@ -317,7 +324,7 @@ img {
 }
 
 .wrongOverlay {
-    border: 2px solid var(--error);
+    border-color: var(--error);
 
     &::before {
         content: "";
