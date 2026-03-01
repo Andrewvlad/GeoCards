@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="Skydiving draw generator">
+    <meta name="description" content="Country flashcards">
     <meta name="author" content="Andrew Vladelshchikov">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <!--Prevent swiped cards from expanding the viewport-->
     <title>GeoCards - Country Flashcards</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
@@ -237,7 +237,7 @@
 <!--Swipe / Drag gestures (only active when card is flipped)-->
 <script>
     // TODO: Switch thresholds to be relative to window size (alongside Math.min())
-    const THRESHOLD = 120; // How many pixels of translation before swipe can be released
+    const THRESHOLD = 80; // How many pixels of translation before swipe can be released
     const SWIPE_THRESHOLD = 20; // How many pixels of translation before considered a swipe
     const MAX_ROT = 20; // Max degrees of card rotation
     const OVERLAY_THRESHOLD = THRESHOLD * 0.8; // When the overlay should appear
@@ -271,13 +271,14 @@
 
             // Start tracking movement
             document.addEventListener('mousemove', onMove);
-            document.addEventListener('touchmove', onMove, {passive: false});
+            document.addEventListener('touchmove', onMove, {passive: false}); // False for Safari default
             document.addEventListener('mouseup',   onEnd);
             document.addEventListener('touchend',  onEnd);
         }
 
         function onMove(e) {
             const [changeX, changeY] = pos(e, true);
+            e.preventDefault(); // Mobile devices slow down significantly if scrolling is allowed
 
             // Abort if scrolling vertically
             if (!isDragging && Math.abs(changeY) > SWIPE_THRESHOLD) return cleanup();
@@ -285,7 +286,6 @@
             if (Math.abs(changeX) > SWIPE_THRESHOLD) isDragging = true;
             if (!isDragging) return;
 
-            e.preventDefault();
             curX = changeX;
             const rot = (changeX / window.innerWidth) * MAX_ROT * 0.5; // 0.5x so it keeps rotating after release
             // Card follows behind cursor at 0.5x
@@ -324,7 +324,7 @@
 
         // Add listeners
         container.addEventListener('mousedown',  onStart);
-        container.addEventListener('touchstart', onStart, {passive: true}); // Mobile scrolling takes priority
+        container.addEventListener('touchstart', onStart);
         container.addEventListener('click', () => {
             if (!flipped || !curX) return flipCard(); // Always flip if on front, or while not being dragged
         });
