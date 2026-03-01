@@ -68,6 +68,58 @@
     let deck = []; // Shuffled and appended deck
     let flipped = false;
 </script>
+<!--Save progress-->
+<script>
+    const SAVE_KEY = 'geocards';
+
+    // Save after each grading
+    function saveSession() {
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify({ // Can only store string data
+                deck:    deck.map(c => c.cca2), // Only store country 2-letter codes
+                correct: correct.textContent,
+                wrong:   wrong.textContent,
+                streak:  streak.textContent,
+                mode:    mode,
+            }));
+        } catch(e) {} // Fail silently if storage full or unavailable
+    }
+
+    function loadSession() {
+        try {
+            const rawData = localStorage.getItem(SAVE_KEY);
+            if (!rawData) return false; // Exit if empty
+
+            const data = JSON.parse(rawData);
+
+            // Create a mapping of code to country (faster to look up than traverse an array)
+            const byCode = Object.fromEntries(countries.map(c => [c.cca2, c]));
+
+            // Rebuild deck from saved cca2 codes
+            deck = (data.deck).map(code => byCode[code])
+                .filter(Boolean); // Remove any changed/undefined
+
+            // Populate stats
+            correct.textContent = data.correct;
+            wrong.textContent   = data.wrong;
+            streak.textContent  = data.streak;
+            mode                = data.mode;
+
+            // Sync the mode button UI to match
+            document.querySelectorAll('#modeBar button:not(:disabled)')
+                .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+
+            return true;
+        } catch(e) {return false;}
+    }
+
+    // Only clear when game is complete. Progress in a new mode will override
+    function clearSession() {
+        try {
+            localStorage.removeItem(SAVE_KEY);
+        } catch(e) {} // Fail silently if storage unavailable
+    }
+</script>
 <!--Define deck-->
 <script>
     function newDeck() {
@@ -87,7 +139,11 @@
     fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion')
         .then(response => response.json())
         .then(json => countries = json)
-        .then(() => newDeck())
+        .then(() => {
+            if (loadSession()) {
+                nextCard();
+            } else newDeck();
+        })
         .catch(() => document.getElementById('arena').innerHTML =
             `<p id="errorMessage">Failed to load countries. Check your connection.</p>`
         );
@@ -123,6 +179,7 @@
 <script>
     const arena = document.getElementById('arena');
 
+    // Grading does the actual shifting of the index
     function nextCard() {
         if (getIndex() >= deck.length) return finish();
 
@@ -170,6 +227,8 @@
 <!--Finish game-->
 <script>
     function finish() {
+        clearSession();
+
         const pct = Math.round(correct.textContent / deck.length * 100);
 
         const message = (() => {
@@ -205,6 +264,7 @@
             streak.textContent = '0';
         }
 
+        saveSession();
         nextCard();
     }
 </script>
