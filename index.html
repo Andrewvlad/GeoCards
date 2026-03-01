@@ -109,8 +109,14 @@
             document.querySelectorAll('#modeBar button:not(:disabled)')
                 .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
 
+            showToast('Resumed');
+
             return true;
         } catch(e) {return false;}
+    }
+
+    function showToast(message) {
+        document.body.insertAdjacentHTML('beforeend', `<output role="status" id="toast">${message}</output>`);
     }
 
     // Only clear when game is complete. Progress in a new mode will override
