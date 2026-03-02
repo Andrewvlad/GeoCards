@@ -484,8 +484,14 @@ img {
     left: 50%;
     transform: translateX(-50%);
     pointer-events: none;
-    animation: hideToast 1.5s forwards 1s;
+    animation: slideToastUp 0.5s ease-out, hideToast 1.25s forwards 1s;
     background: var(--card);
+}
+
+@keyframes slideToastUp {
+    from {
+        translate: 0 15px;
+    }
 }
 
 @keyframes hideToast {
