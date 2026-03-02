@@ -467,7 +467,7 @@ img {
     }
 }
 
-#toast {
+.toast {
     width: 100%;
     border: 1px solid var(--accent);
     color: var(--accent);
@@ -484,11 +484,11 @@ img {
     left: 50%;
     transform: translateX(-50%);
     pointer-events: none;
-    animation: toast 1.5s forwards 1s;
+    animation: hideToast 1.5s forwards 1s;
     background: var(--card);
 }
 
-@keyframes toast {
+@keyframes hideToast {
     to {
         opacity: 0;
         display: none;
