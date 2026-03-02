@@ -260,18 +260,40 @@
 </script>
 <!--Grade card-->
 <script>
-    function grade(value) {
-        if (value) {
-            correct.textContent++;
-            streak.textContent++;
-        } else {
-            deck.push(deck[getIndex()]);
-            wrong.textContent++;
-            streak.textContent = '0';
-        }
+    let lock = false;
 
-        saveSession();
-        nextCard();
+    function grade(value) {
+        if (lock++) return; // Prevents multiple grades being queued up during timeout
+
+        swipeController?.abort(); // Release all card listeners
+
+        const card = document.getElementById('cardContainer');
+        const back = document.querySelector('.back');
+
+        back.classList.toggle('correctOverlay', value);
+        back.classList.toggle('wrongOverlay',  !value);
+
+        // TODO: prevent concurrent flip & swipe
+        const flyX = (value ? 0.75 : -0.75) * window.innerWidth;
+        const rot  = value ? MAX_ROT : -MAX_ROT;
+        card.style.transition = ''; // Remove "none" transition
+        card.style.transform  = `rotateY(180deg) translateX(${-flyX}px) rotate(${-rot}deg)`;
+        setTimeout(() => addGrade(), SWIPE_DURATION);
+
+        function addGrade() {
+            if (value) {
+                correct.textContent++;
+                streak.textContent++;
+            } else {
+                deck.push(deck[getIndex()]);
+                wrong.textContent++;
+                streak.textContent = '0';
+            }
+
+            saveSession();
+            nextCard();
+            lock = false;
+        }
     }
 </script>
 <!--Switch mode buttons-->
@@ -293,6 +315,7 @@
 <!--Keybindings-->
 <script>
     document.addEventListener('keydown', e => {
+        // TODO: disable keybindings on finish screen
         if (e.code === 'Space') {e.preventDefault(); flipCard();}
         if (flipped) {
             if (e.code === 'ArrowRight') grade(true);
@@ -300,7 +323,7 @@
         }
     });
 </script>
-<!--Swipe / Drag gestures (only active when card is flipped)-->
+<!--Swipe/drag card-->
 <script>
     // TODO: Switch thresholds to be relative to window size (alongside Math.min())
     const THRESHOLD = 80; // How many pixels of translation before swipe can be released
@@ -309,7 +332,12 @@
     const OVERLAY_THRESHOLD = THRESHOLD * 0.8; // When the overlay should appear
     const SWIPE_DURATION = 300; // Number of milliseconds that the swipe animation will play
 
+    let swipeController; // AbortController for current card's listeners
+
     function attachSwipe() {
+        swipeController = new AbortController();
+        const {signal} = swipeController;
+
         const container = document.getElementById('cardContainer');
         const back = document.querySelector('.back');
 
@@ -336,10 +364,10 @@
             container.style.transition = 'none'; // Prevents lag when dragging the element
 
             // Start tracking movement
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('touchmove', onMove, {passive: false}); // False for Safari default
-            document.addEventListener('mouseup',   onEnd);
-            document.addEventListener('touchend',  onEnd);
+            document.addEventListener('mousemove', onMove, {signal});
+            document.addEventListener('touchmove', onMove, {signal, passive: false}); // False for Safari default
+            document.addEventListener('mouseup',   onEnd, {signal});
+            document.addEventListener('touchend',  onEnd, {signal});
         }
 
         function onMove(e) {
@@ -363,15 +391,7 @@
             cleanup();
 
             if (Math.abs(curX) >= THRESHOLD) {
-                // Stop any further interactions
-                container.removeEventListener('mousedown',  onStart);
-                container.removeEventListener('touchstart', onStart);
-
-                const goRight = curX > 0;
-                const flyX = (goRight ? 0.75 : -0.75) * window.innerWidth;
-                const rot  = goRight ? MAX_ROT : -MAX_ROT;
-                container.style.transform  = `rotateY(180deg) translateX(${-flyX}px) rotate(${-rot}deg)`;
-                setTimeout(() => grade(goRight), SWIPE_DURATION);
+                grade(curX > 0);
             } else {
                 setOverlay();
                 container.style.transform = ''; // Reset position
@@ -389,11 +409,11 @@
         }
 
         // Add listeners
-        container.addEventListener('mousedown',  onStart);
-        container.addEventListener('touchstart', onStart);
+        container.addEventListener('mousedown',  onStart, {signal});
+        container.addEventListener('touchstart', onStart, {signal});
         container.addEventListener('click', () => {
             if (!flipped || !curX) return flipCard(); // Always flip if on front, or while not being dragged
-        });
+        }, {signal});
     }
 </script>
 <noscript>To use this tool, please enable JavaScript.</noscript>
