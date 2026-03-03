@@ -279,7 +279,6 @@
         back.classList.toggle('correctOverlay', value);
         back.classList.toggle('wrongOverlay',  !value);
 
-        // TODO: prevent concurrent flip & swipe
         const flyX = (value ? 0.75 : -0.75) * window.innerWidth;
         const rot  = value ? MAX_ROT : -MAX_ROT;
         card.style.transition = ''; // Remove "none" transition

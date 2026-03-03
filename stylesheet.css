@@ -193,14 +193,16 @@ header {
 
 /* Flashcard */
 #card {
-    perspective: 1200px; width: 100%;
+    width: 100%;
     animation: slideUp 0.35s ease;
 }
 
 /* Card entrance animation */
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
 }
 
 #cardContainer {
@@ -209,8 +211,11 @@ header {
     padding-top: 62%;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    transform: perspective(1200px); /* 3D flip effect. A transform so the script easily override it */
 
-    &.flipped { transform: rotateY(180deg); }
+    &.flipped {
+        transform: perspective(1200px) rotateY(180deg);
+    }
 }
 
 .cardFace {
