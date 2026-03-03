@@ -193,19 +193,7 @@ header {
 
 /* Flashcard */
 #card {
-    width: 100%;
     animation: slideUp 0.35s ease;
-}
-
-/* Card entrance animation */
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-}
-
-#cardContainer {
     position: relative;
     width: 100%;
     padding-top: 62%;
@@ -215,6 +203,14 @@ header {
 
     &.flipped {
         transform: perspective(1200px) rotateY(180deg);
+    }
+}
+
+/* Animate card entering the page */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        translate: 0 20px;
     }
 }
 

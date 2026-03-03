@@ -172,7 +172,7 @@
 <!--Flip card-->
 <script>
     function flipCard() {
-        const card = document.getElementById('cardContainer');
+        const card = document.getElementById('card');
 
         flipped = !flipped;
         card.classList.toggle('flipped', flipped);
@@ -214,18 +214,16 @@
 
         arena.innerHTML = `
             <div id="card">
-                <div id="cardContainer">
-                    <div class="cardFace front">
-                        <div class="cardNum">${progress.textContent}</div>
-                        ${faceCard}
-                    </div>
-                    <div class="cardFace back">
-                        <div class="cardNum">${progress.textContent}</div>
-                        <div class="cardLabel">Answer</div>
-                        <img src="${png}" alt="Country Flag">
-                        <h1 id="countryName">${common}</h1>
-                        <p>${region}${subregion ? ' · ' + subregion : ''}</p>
-                    </div>
+                <div class="cardFace front">
+                    <div class="cardNum">${progress.textContent}</div>
+                    ${faceCard}
+                </div>
+                <div class="cardFace back">
+                    <div class="cardNum">${progress.textContent}</div>
+                    <div class="cardLabel">Answer</div>
+                    <img src="${png}" alt="Country Flag">
+                    <h1 id="countryName">${common}</h1>
+                    <p>${region}${subregion ? ' · ' + subregion : ''}</p>
                 </div>
             </div>
             <p id="flipInfo" onclick="flipCard()">${frontFlipInfo}</p>
@@ -273,7 +271,7 @@
 
         swipeController?.abort(); // Release all card listeners
 
-        const card = document.getElementById('cardContainer');
+        const card = document.getElementById('card');
         const back = document.querySelector('.back');
 
         back.classList.toggle('correctOverlay', value);
@@ -343,7 +341,7 @@
         swipeController = new AbortController();
         const {signal} = swipeController;
 
-        const container = document.getElementById('cardContainer');
+        const card = document.getElementById('card');
         const front = document.querySelector('.front');
         const back = document.querySelector('.back');
 
@@ -351,8 +349,8 @@
         let isDragging = false;
 
         // Add listeners
-        container.addEventListener('mousedown',  onStart, {signal});
-        container.addEventListener('touchstart', onStart, {signal});
+        card.addEventListener('mousedown',  onStart, {signal});
+        card.addEventListener('touchstart', onStart, {signal});
 
         // Split to eat click on flip
         front.addEventListener('click', flipCard, {signal});
@@ -375,7 +373,7 @@
             isDragging = false;
             [startX, startY] = pos(e);
 
-            container.style.transition = 'none'; // Prevents lag when dragging the element
+            card.style.transition = 'none'; // Prevents lag when dragging the element
 
             // Start tracking movement
             document.addEventListener('mousemove', onMove, {signal});
@@ -397,7 +395,7 @@
             curX = changeX;
             const rot = (changeX / window.innerWidth) * MAX_ROT * 0.5; // 0.5x so it keeps rotating after release
             // Card follows behind cursor at 0.5x
-            container.style.transform = `rotateY(180deg) translateX(${-changeX * 0.5}px) rotate(${-rot}deg)`;
+            card.style.transform = `rotateY(180deg) translateX(${-changeX * 0.5}px) rotate(${-rot}deg)`;
             setOverlay(changeX > OVERLAY_THRESHOLD ? 'correct' : changeX < -OVERLAY_THRESHOLD ? 'wrong' : null);
         }
 
@@ -408,11 +406,11 @@
 
             // Reset color and position
             setOverlay();
-            container.style.transform = '';
+            card.style.transform = '';
         }
 
         function cleanup() {
-            container.style.transition = ''; // Remove "none" transition
+            card.style.transition = ''; // Remove "none" transition
 
             // Release listeners
             document.removeEventListener('mousemove', onMove);
