@@ -54,6 +54,7 @@
 
 
 <!--Scripts-->
+<script src="index.js"></script>
 <script>
     // Initialize stats
     const correct = document.getElementById('statCorrect');
@@ -201,14 +202,16 @@
 
         const {
             name :{common},
-            flags: {png},
+            flags: {png, alt},
+            capital, // This is an array
+            population,
             region,
             subregion,
         } = deck[getIndex()];
 
         const faceCard = (() => {
             switch (mode) {
-                case 'flag': return flagModeQuestion + `<img src="${png}" alt="Country Flag">`;
+                case 'flag': return flagModeQuestion + `<img src="${png}" alt="${alt}">`;
                 case 'name': return nameModeQuestion + `<h1>${common}</h1>`;
             }})();
 
@@ -221,9 +224,12 @@
                 <div class="cardFace back">
                     <div class="cardNum">${progress.textContent}</div>
                     <div class="cardLabel">Answer</div>
-                    <img src="${png}" alt="Country Flag">
+                    <img src="${png}" alt="${alt}">
                     <h1 id="countryName">${common}</h1>
-                    <p>${region}${subregion ? ' · ' + subregion : ''}</p>
+                    <p id="countryInfo">
+                        ${capital?.length ? capital.join(', ') : 'No capital'} · ${region}${subregion ? ' · ' + subregion : ''}<br>
+                        ${formatPopulation(population) ?? 'Unknown population'}
+                    </p>
                 </div>
             </div>
             <p id="keyboardHints">${frontKeyboardHints}</p>

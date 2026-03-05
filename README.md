@@ -18,9 +18,9 @@ Requires an internet connection to fetch country data from the [REST Countries A
 
 ## TODO
 - [x] Mobile support
-- [ ] Add skipping
-- [ ] Display population
-- [ ] Display capitals
+- [x] Add skipping
+- [x] Display population
+- [x] Display capitals
 - [ ] Capitals mode
 - [ ] Multiple choice mode
 - [ ] Population filter
