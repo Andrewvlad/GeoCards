@@ -19,10 +19,9 @@
 </header>
 
 <div id="modeBar">
-    <button class="active" data-mode="flag">🏳 Flag</button>
+    <button data-mode="flag" class="active">🏳 Flag</button>
     <button data-mode="name">✏ Name</button>
-    <button data-mode="capital" title="Coming soon" disabled>🏛 Capitals</button>
-    <button data-mode="population" title="Coming soon" disabled>👥 Population</button>
+    <button data-mode="capital">🏛 Capitals</button>
 </div>
 
 <div id="statsBar">
@@ -166,9 +165,6 @@
 
     const frontKeyboardHints = `<span>← skip</span><span>⌴ flip</span><span class="key">→ skip</span>`;
     const backKeyboardHints = `<span>← wrong</span><span>⌴ flip</span><span class="key">→ correct</span>`;
-
-    const flagModeQuestion = `<div class="cardLabel">What country is this?</div>`;
-    const nameModeQuestion = `<div class="cardLabel">Find the flag for:</div>`;
 </script>
 <!--Flip card-->
 <script>
@@ -211,14 +207,17 @@
 
         const faceCard = (() => {
             switch (mode) {
-                case 'flag': return flagModeQuestion + `<img src="${png}" alt="${alt}">`;
-                case 'name': return nameModeQuestion + `<h1>${common}</h1>`;
+                case 'flag': return `<img src="${png}" alt="${alt}">`;
+                case 'name': return `<h1>${common}</h1>`;
+                // TODO: Filter out countries without a capital city (ex. Heard Island and McDonald Islands)
+                case 'capital': return `<h1>${capital?.length ? capital.join(', ') : 'No capital'}</h1>`;
             }})();
 
         arena.innerHTML = `
             <div id="card">
                 <div class="cardFace front">
                     <div class="cardNum">${progress.textContent}</div>
+                    <div class="cardLabel">Do you know this country?</div>
                     ${faceCard}
                 </div>
                 <div class="cardFace back">

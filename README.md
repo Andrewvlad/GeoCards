@@ -21,7 +21,7 @@ Requires an internet connection to fetch country data from the [REST Countries A
 - [x] Add skipping
 - [x] Display population
 - [x] Display capitals
-- [ ] Capitals mode
+- [x] Capitals mode
 - [ ] Multiple choice mode
 - [ ] Population filter
 - [ ] -dles (daily) mode
