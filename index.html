@@ -116,7 +116,12 @@
     }
 
     function showToast(message) {
-        document.body.insertAdjacentHTML('beforeend', `<output role="status" class="toast">${message}</output>`);
+        const toast = document.createElement('output');
+        toast.role = 'status';
+        toast.className = 'toast';
+        toast.textContent = message;
+        toast.addEventListener('animationend', e => e.animationName === 'hideToast' && toast.remove());
+        document.body.appendChild(toast);
     }
 
     // Only clear when game is complete. Progress in a new mode will override

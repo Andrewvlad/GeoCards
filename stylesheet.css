@@ -513,7 +513,6 @@ img {
 @keyframes hideToast {
     to {
         opacity: 0;
-        display: none;
     }
 }
 
