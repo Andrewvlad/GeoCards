@@ -11,10 +11,13 @@ Requires an internet connection to fetch country data from the [REST Countries A
 
 ## Features
 - Recycles incorrect cards
-- Auto-saves session and stats to localStorage
+- Auto-saves session, stats, and settings to localStorage
 - Keybindings and gesture controls
     - `[SPACE]` (or tap) - Flip card
     - `[←]`/`[→]` (or swipe) - Mark wrong/correct
+
+## Settings
+- Filter countries by population
 
 ## TODO
 - [x] Mobile support
@@ -23,6 +26,6 @@ Requires an internet connection to fetch country data from the [REST Countries A
 - [x] Display capitals
 - [x] Capitals mode
 - [ ] Multiple choice mode
-- [ ] Population filter
+- [x] Population filter
 - [ ] -dles (daily) mode
 - [ ] Downloadable file with internal CSS

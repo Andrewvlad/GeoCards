@@ -14,9 +14,32 @@
 
 <!--Content-->
 <header>
-    <div id="logo">Geo<span>Cards</span></div>
-    <div id="tagline">Country Knowledge Trainer</div>
+    <div id="headerTitle">
+        <div id="logo">Geo<span>Cards</span></div>
+        <div id="tagline">Country Knowledge Trainer</div>
+    </div>
+    <button id="settingsToggle" onclick="toggleSettings()">⚙ Settings</button>
 </header>
+
+<div id="settingsPanel" class="hidden">
+    <div class="settingsGroup">
+        <div class="settingsLabel">
+            <span>Population Range</span>
+            <span id="popValues">All countries</span>
+        </div>
+        <div id="rangeSlider">
+            <div id="rangeTrack"></div>
+            <div id="rangeFill"></div>
+            <input type="range" id="minPopSlider" min="0" value="0">
+            <input type="range" id="maxPopSlider" min="0">
+        </div>
+        <div class="rangeBounds">
+            <span id="minRangeLabel">0</span>
+            <span id="maxRangeLabel">∞</span>
+        </div>
+    </div>
+    <button id="applyFilter" onclick="applyFilter()">Apply & Restart</button>
+</div>
 
 <div id="modeBar">
     <button data-mode="flag" class="active">🏳 Flag</button>
@@ -105,9 +128,19 @@
             streak.textContent  = data.streak;
             mode                = data.mode;
 
+            // Derive population range from the restored deck
+            const deckPops = sortLowToHigh(deck.map(c => c.population));
+            popMin = deckPops[0];
+            popMax = deckPops.at(-1);
+
             // Sync the mode button UI to match
             document.querySelectorAll('#modeBar button:not(:disabled)')
                 .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+
+            // Sync the settings UI to match
+            minSlider.value = populationRangeValues.indexOf(formatPopulation(popMin));
+            maxSlider.value = populationRangeValues.indexOf(formatPopulation(popMax));
+            updateRangeUI();
 
             showToast('Resumed');
 
@@ -134,7 +167,7 @@
 <!--Define deck-->
 <script>
     function newDeck() {
-        deck = [...countries].sort(() => 0.5 - Math.random()); // TODO: Use a real shuffle
+        deck = filterDeck(countries, {min: popMin, max: popMax});
 
         correct.textContent = '0';
         wrong.textContent = '0';
@@ -147,14 +180,23 @@
 </script>
 <!--Load country data-->
 <script>
+    let populationRangeValues; // Idx to value used for sliders (unique, formatted populations)
+    let byFormatting; // For applyFilter() (mapping of all pop values that belong to a single formatted population)
+
     fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion')
         .then(response => response.json())
         .then(json => countries = json)
         .then(() => {
-            if (loadSession()) {
-                nextCard();
-            } else newDeck();
+            populationRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.population)).map(formatPopulation))];
+            byFormatting = countries.reduce((acc, {population}) => {
+                let idx = formatPopulation(population);
+                acc[idx] = acc[idx] || [];
+                acc[idx].push(population);
+                return acc;
+            }, {});
+            initSliders();
         })
+        .then(() => loadSession() ? nextCard(): newDeck())
         .catch(() => document.getElementById('arena').innerHTML =
             `<p id="errorMessage">Failed to load countries. Check your connection.</p>`
         );
@@ -292,11 +334,12 @@
         const flyX = (flipped ^ direction ? 0.75 : -0.75) * window.innerWidth;
         const rot  = flipped ^ direction ? MAX_ROT : -MAX_ROT;
         card.style.transition = ''; // Remove "none" transition
+        // Removes perspective transition to prevent warping
         card.style.transform  = `${flipped ? 'rotateY(180deg)' : ''} translateX(${flyX}px) rotate(${rot}deg)`;
         setTimeout(() => addGrade(flipped), SWIPE_DURATION);
 
-        function addGrade() {
-            if (flipped) {
+        function addGrade(value) {
+            if (value) {
                 if (direction) { // Correct
                     correct.textContent++;
                     streak.textContent++;
@@ -329,6 +372,70 @@
             mode = button.dataset.mode;
             newDeck();
         });
+    }
+</script>
+<!--Settings panel-->
+<script>
+    function toggleSettings() {
+        document.getElementById('settingsPanel').classList.toggle('hidden');
+        document.getElementById('settingsToggle').classList.toggle('active');
+    }
+</script>
+<!--Population filter-->
+<script>
+    let popMin = 0;
+    let popMax = Infinity;
+    let maxPopIdx; // Index length of unique, formatted populations
+
+    const fill = document.getElementById('rangeFill');
+    // Return idx
+    const minSlider = document.getElementById('minPopSlider');
+    const maxSlider = document.getElementById('maxPopSlider');
+
+    function updateRangeUI() {
+        const minRangeIdx = +minSlider.value;
+        const maxRangeIdx = +maxSlider.value;
+
+        // Position the fill between the two thumbs
+        const minPct = (minRangeIdx / maxPopIdx) * 100;
+        const maxPct = (maxRangeIdx / maxPopIdx) * 100;
+        fill.style.left = minPct + '%';
+        fill.style.width = (maxPct - minPct) + '%';
+
+        // Update range label
+        const label = (minRangeIdx === 0 && maxRangeIdx === maxPopIdx)
+            ? 'All countries'
+            : `${populationRangeValues[minRangeIdx]} - ${populationRangeValues[maxRangeIdx]}`;
+        document.getElementById('popValues').textContent = label;
+    }
+
+    function initSliders() {
+        maxPopIdx = populationRangeValues.length - 1;
+
+        minSlider.max = maxSlider.max = maxSlider.value = maxPopIdx;
+
+        document.getElementById('maxRangeLabel').textContent = populationRangeValues.at(-1);
+
+        updateRangeUI();
+
+        // Enforce min <= max
+        minSlider.addEventListener('input', () => +minSlider.value > +maxSlider.value
+            ? minSlider.value = maxSlider.value
+            : updateRangeUI()
+        );
+        maxSlider.addEventListener('input', () => +maxSlider.value < +minSlider.value
+            ? maxSlider.value = minSlider.value
+            : updateRangeUI()
+        );
+    }
+
+    function applyFilter() {
+        // Since multiple countries can have the same formatted value, we want to make sure to include them all
+        popMin = Math.min(...byFormatting[populationRangeValues[minSlider.value]]);
+        popMax = Math.max(...byFormatting[populationRangeValues[maxSlider.value]]);
+
+        toggleSettings();
+        newDeck();
     }
 </script>
 <!--Keybindings-->
