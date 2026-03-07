@@ -412,7 +412,7 @@
     function initSliders() {
         maxPopIdx = populationRangeValues.length - 1;
 
-        minSlider.max = maxSlider.max = maxSlider.value = maxPopIdx;
+        maxSlider.value = minSlider.max = maxSlider.max = maxPopIdx;
 
         document.getElementById('maxRangeLabel').textContent = populationRangeValues.at(-1);
 
