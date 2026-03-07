@@ -30,8 +30,8 @@
         <div id="rangeSlider">
             <div id="rangeTrack"></div>
             <div id="rangeFill"></div>
-            <input type="range" id="minPopSlider" min="0" value="0">
-            <input type="range" id="maxPopSlider" min="0">
+            <input type="range" min="0" oninput="updateRangeUI()">
+            <input type="range" min="0" oninput="updateRangeUI()">
         </div>
         <div class="rangeBounds">
             <span id="minRangeLabel">0</span>
@@ -389,12 +389,10 @@
 
     const fill = document.getElementById('rangeFill');
     // Return idx
-    const minSlider = document.getElementById('minPopSlider');
-    const maxSlider = document.getElementById('maxPopSlider');
+    const [minSlider, maxSlider] = document.querySelectorAll('#rangeSlider input');
 
     function updateRangeUI() {
-        const minRangeIdx = +minSlider.value;
-        const maxRangeIdx = +maxSlider.value;
+        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minSlider.value, +maxSlider.value]);
 
         // Position the fill between the two thumbs
         const minPct = (minRangeIdx / maxPopIdx) * 100;
@@ -410,29 +408,22 @@
     }
 
     function initSliders() {
-        maxPopIdx = populationRangeValues.length - 1;
+        minSlider.max = maxSlider.max = maxPopIdx = populationRangeValues.length - 1;
 
-        maxSlider.value = minSlider.max = maxSlider.max = maxPopIdx;
+        minSlider.value = 0;
+        maxSlider.value = maxPopIdx;
 
         document.getElementById('maxRangeLabel').textContent = populationRangeValues.at(-1);
 
         updateRangeUI();
-
-        // Enforce min <= max
-        minSlider.addEventListener('input', () => +minSlider.value > +maxSlider.value
-            ? minSlider.value = maxSlider.value
-            : updateRangeUI()
-        );
-        maxSlider.addEventListener('input', () => +maxSlider.value < +minSlider.value
-            ? maxSlider.value = minSlider.value
-            : updateRangeUI()
-        );
     }
 
     function applyFilter() {
+        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minSlider.value, +maxSlider.value]);
+
         // Since multiple countries can have the same formatted value, we want to make sure to include them all
-        popMin = Math.min(...byFormatting[populationRangeValues[minSlider.value]]);
-        popMax = Math.max(...byFormatting[populationRangeValues[maxSlider.value]]);
+        popMin = Math.min(...byFormatting[populationRangeValues[minRangeIdx]]);
+        popMax = Math.max(...byFormatting[populationRangeValues[maxRangeIdx]]);
 
         toggleSettings();
         newDeck();
