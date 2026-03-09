@@ -17,7 +17,7 @@ Requires an internet connection to fetch country data from the [REST Countries A
     - `[←]`/`[→]` (or swipe) - Mark wrong/correct
 
 ## Settings
-- Filter countries by population
+- Filter countries by population and area
 
 ## TODO
 - [x] Mobile support

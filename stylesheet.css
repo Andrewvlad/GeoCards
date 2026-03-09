@@ -205,18 +205,18 @@ header {
     color: var(--muted);
     margin-bottom: 0.75rem;
 
-    #popValues {
+    .settingsValues {
         color: var(--accent);
     }
 }
 
 /* Dual-thumb range slider */
-#rangeSlider {
+.rangeSlider {
     position: relative;
     height: 20px;
 
     /* Shared vertical centering for all children */
-    #rangeTrack, #rangeFill, input[type="range"] {
+    .rangeTrack, .rangeFill, input[type="range"] {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
@@ -225,12 +225,12 @@ header {
         border-radius: 2px;
     }
 
-    #rangeTrack {
+    .rangeTrack {
         width: 100%;
         background: var(--border);
     }
 
-    #rangeFill {
+    .rangeFill {
         background: var(--accent);
         pointer-events: none;
     }
@@ -287,7 +287,7 @@ header {
     margin-top: 0.3rem;
 }
 
-#applyFilter {
+#applyFilters {
     font-family: var(--primaryFont);
     font-size: 0.72rem;
     letter-spacing: 0.1em;

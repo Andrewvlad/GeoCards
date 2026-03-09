@@ -23,22 +23,45 @@
 
 <div id="settingsPanel" class="hidden">
     <div class="settingsGroup">
-        <div class="settingsLabel">
-            <span>Population Range</span>
-            <span id="popValues">All countries</span>
+
+        <div id="population">
+            <div class="settingsLabel">
+                <span>Population Range</span>
+                <span id="popValues" class="settingsValues">All countries</span>
+            </div>
+            <div class="rangeSlider">
+                <div class="rangeTrack"></div>
+                <div id="popRangeFill" class="rangeFill"></div>
+                <input type="range" min="0" oninput="updatePopRangeUI()">
+                <input type="range" min="0" oninput="updatePopRangeUI()">
+            </div>
+            <div class="rangeBounds">
+                <span id="minPopRangeLabel">0</span>
+                <span id="maxPopRangeLabel">∞</span>
+            </div>
         </div>
-        <div id="rangeSlider">
-            <div id="rangeTrack"></div>
-            <div id="rangeFill"></div>
-            <input type="range" min="0" oninput="updateRangeUI()">
-            <input type="range" min="0" oninput="updateRangeUI()">
+
+        <br>
+
+        <div id="area">
+            <div class="settingsLabel">
+                <span>Area Range</span>
+                <span id="areaValues" class="settingsValues">All countries</span>
+            </div>
+            <div class="rangeSlider">
+                <div class="rangeTrack"></div>
+                <div id="areaRangeFill" class="rangeFill"></div>
+                <input type="range" min="0" oninput="updateAreaRangeUI()">
+                <input type="range" min="0" oninput="updateAreaRangeUI()">
+            </div>
+            <div class="rangeBounds">
+                <span id="minAreaRangeLabel">0 km²</span>
+                <span id="maxAreaRangeLabel">∞ km²</span>
+            </div>
         </div>
-        <div class="rangeBounds">
-            <span id="minRangeLabel">0</span>
-            <span id="maxRangeLabel">∞</span>
-        </div>
+
     </div>
-    <button id="applyFilter" onclick="applyFilter()">Apply & Restart</button>
+    <button id="applyFilters" onclick="applyFilters()">Apply & Restart</button>
 </div>
 
 <div id="modeBar">
@@ -128,19 +151,27 @@
             streak.textContent  = data.streak;
             mode                = data.mode;
 
-            // Derive population range from the restored deck
+            // Derive settings from the restored deck
             const deckPops = sortLowToHigh(deck.map(c => c.population));
             popMin = deckPops[0];
             popMax = deckPops.at(-1);
+
+            const deckAreas = sortLowToHigh(deck.map(c => c.area));
+            areaMin = deckAreas[0];
+            areaMax = deckAreas.at(-1);
 
             // Sync the mode button UI to match
             document.querySelectorAll('#modeBar button:not(:disabled)')
                 .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
 
             // Sync the settings UI to match
-            minSlider.value = populationRangeValues.indexOf(formatPopulation(popMin));
-            maxSlider.value = populationRangeValues.indexOf(formatPopulation(popMax));
-            updateRangeUI();
+            minPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMin));
+            maxPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMax));
+            updatePopRangeUI();
+
+            minAreaSlider.value = areaRangeValues.indexOf(formatArea(areaMin));
+            maxAreaSlider.value = areaRangeValues.indexOf(formatArea(areaMax));
+            updateAreaRangeUI();
 
             showToast('Resumed');
 
@@ -167,7 +198,7 @@
 <!--Define deck-->
 <script>
     function newDeck() {
-        deck = filterDeck(countries, {min: popMin, max: popMax});
+        deck = filterDeck(countries, {popMin, popMax, areaMin, areaMax});
 
         correct.textContent = '0';
         wrong.textContent = '0';
@@ -181,17 +212,26 @@
 <!--Load country data-->
 <script>
     let populationRangeValues; // Idx to value used for sliders (unique, formatted populations)
-    let byFormatting; // For applyFilter() (mapping of all pop values that belong to a single formatted population)
+    let areaRangeValues; // Idx to value used for sliders (unique, formatted areas)
+    let byPopFormatting; // Mapping of all pop values that belong to a single formatted population
+    let byAreaFormatting; // Mapping of all area values that belong to a single formatted area
 
-    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,region,subregion')
+    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,area,region,subregion')
         .then(response => response.json())
         .then(json => countries = json)
         .then(() => {
             populationRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.population)).map(formatPopulation))];
-            byFormatting = countries.reduce((acc, {population}) => {
-                let idx = formatPopulation(population);
-                acc[idx] = acc[idx] || [];
-                acc[idx].push(population);
+            areaRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.area)).map(formatArea))];
+            byPopFormatting = countries.reduce((acc, {population}) => {
+                let key = formatPopulation(population);
+                acc[key] = acc[key] || [];
+                acc[key].push(population);
+                return acc;
+            }, {});
+            byAreaFormatting = countries.reduce((acc, {area}) => {
+                let key = formatArea(area);
+                acc[key] = acc[key] || [];
+                acc[key].push(area);
                 return acc;
             }, {});
             initSliders();
@@ -380,6 +420,39 @@
         document.getElementById('settingsPanel').classList.toggle('hidden');
         document.getElementById('settingsToggle').classList.toggle('active');
     }
+
+    function initSliders() {
+        maxPopSlider.max = minPopSlider.max = maxPopIdx = populationRangeValues.length - 1;
+        maxAreaSlider.max = minAreaSlider.max = maxAreaIdx = areaRangeValues.length - 1;
+
+        minPopSlider.value = maxPopIdx * 2/3; // Default to top third of populated countries
+        maxPopSlider.value = maxPopIdx;
+
+        minAreaSlider.value = maxAreaIdx * 1/3; // Default to top 2/3rds of countries by size
+        maxAreaSlider.value = maxAreaIdx;
+
+        document.getElementById('maxPopRangeLabel').textContent = populationRangeValues.at(-1);
+        document.getElementById('maxAreaRangeLabel').textContent = areaRangeValues.at(-1);
+
+        popMin = Math.min(...byPopFormatting[populationRangeValues[minPopSlider.value]]);
+        areaMin = Math.min(...byAreaFormatting[areaRangeValues[minAreaSlider.value]]);
+
+        updatePopRangeUI();
+        updateAreaRangeUI();
+    }
+
+    function applyFilters() {
+        const [minPopIdx, maxPopIdx] = sortLowToHigh([+minPopSlider.value, +maxPopSlider.value]);
+        popMin = Math.min(...byPopFormatting[populationRangeValues[minPopIdx]]);
+        popMax = Math.max(...byPopFormatting[populationRangeValues[maxPopIdx]]);
+
+        const [minAreaIdx, maxAreaIdx] = sortLowToHigh([+minAreaSlider.value, +maxAreaSlider.value]);
+        areaMin = Math.min(...byAreaFormatting[areaRangeValues[minAreaIdx]]);
+        areaMax = Math.max(...byAreaFormatting[areaRangeValues[maxAreaIdx]]);
+
+        toggleSettings();
+        newDeck();
+    }
 </script>
 <!--Population filter-->
 <script>
@@ -387,18 +460,18 @@
     let popMax = Infinity;
     let maxPopIdx; // Index length of unique, formatted populations
 
-    const fill = document.getElementById('rangeFill');
+    const popFill = document.getElementById('popRangeFill');
     // Return idx
-    const [minSlider, maxSlider] = document.querySelectorAll('#rangeSlider input');
+    const [minPopSlider, maxPopSlider] = document.querySelectorAll('#population .rangeSlider input');
 
-    function updateRangeUI() {
-        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minSlider.value, +maxSlider.value]);
+    function updatePopRangeUI() {
+        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minPopSlider.value, +maxPopSlider.value]);
 
         // Position the fill between the two thumbs
         const minPct = (minRangeIdx / maxPopIdx) * 100;
         const maxPct = (maxRangeIdx / maxPopIdx) * 100;
-        fill.style.left = minPct + '%';
-        fill.style.width = (maxPct - minPct) + '%';
+        popFill.style.left = minPct + '%';
+        popFill.style.width = (maxPct - minPct) + '%';
 
         // Update range label
         const label = (minRangeIdx === 0 && maxRangeIdx === maxPopIdx)
@@ -406,29 +479,31 @@
             : `${populationRangeValues[minRangeIdx]} - ${populationRangeValues[maxRangeIdx]}`;
         document.getElementById('popValues').textContent = label;
     }
+</script>
+<!--Area filter-->
+<script>
+    let areaMin = 0;
+    let areaMax = Infinity;
+    let maxAreaIdx; // Index length of unique, formatted areas
 
-    function initSliders() {
-        minSlider.max = maxSlider.max = maxPopIdx = populationRangeValues.length - 1;
+    const areaFill = document.getElementById('areaRangeFill');
+    // Return idx
+    const [minAreaSlider, maxAreaSlider] = document.querySelectorAll('#area .rangeSlider input');
 
-        minSlider.value = maxPopIdx * 2/3; // Default to top third of populated countries
-        maxSlider.value = maxPopIdx;
+    function updateAreaRangeUI() {
+        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minAreaSlider.value, +maxAreaSlider.value]);
 
-        popMin = Math.min(...byFormatting[populationRangeValues[minSlider.value]]);
+        // Position the fill between the two thumbs
+        const minPct = (minRangeIdx / maxAreaIdx) * 100;
+        const maxPct = (maxRangeIdx / maxAreaIdx) * 100;
+        areaFill.style.left = minPct + '%';
+        areaFill.style.width = (maxPct - minPct) + '%';
 
-        document.getElementById('maxRangeLabel').textContent = populationRangeValues.at(-1);
-
-        updateRangeUI();
-    }
-
-    function applyFilter() {
-        const [minRangeIdx, maxRangeIdx] = sortLowToHigh([+minSlider.value, +maxSlider.value]);
-
-        // Since multiple countries can have the same formatted value, we want to make sure to include them all
-        popMin = Math.min(...byFormatting[populationRangeValues[minRangeIdx]]);
-        popMax = Math.max(...byFormatting[populationRangeValues[maxRangeIdx]]);
-
-        toggleSettings();
-        newDeck();
+        // Update range label
+        const label = (minRangeIdx === 0 && maxRangeIdx === maxAreaIdx)
+            ? 'All countries'
+            : `${areaRangeValues[minRangeIdx]} - ${areaRangeValues[maxRangeIdx]}`;
+        document.getElementById('areaValues').textContent = label;
     }
 </script>
 <!--Keybindings-->
