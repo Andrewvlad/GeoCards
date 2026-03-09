@@ -410,8 +410,10 @@
     function initSliders() {
         minSlider.max = maxSlider.max = maxPopIdx = populationRangeValues.length - 1;
 
-        minSlider.value = 0;
+        minSlider.value = maxPopIdx * 2/3; // Default to top third of populated countries
         maxSlider.value = maxPopIdx;
+
+        popMin = Math.min(...byFormatting[populationRangeValues[minSlider.value]]);
 
         document.getElementById('maxRangeLabel').textContent = populationRangeValues.at(-1);
 
