@@ -191,7 +191,7 @@ header {
 }
 
 .settingsGroup {
-    flex: 1;
+    width: 100%;
     min-width: 200px;
 }
 
@@ -300,6 +300,7 @@ header {
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
+    margin-left: auto;
 
     &:hover {
         background: var(--accent);
