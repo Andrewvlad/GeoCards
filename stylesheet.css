@@ -35,7 +35,7 @@
 body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--primaryFont);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -146,19 +146,7 @@ header {
             pointer-events: none;
         }
 
-        /* Style coming soon buttons*/
-        &:disabled {
-            opacity: 0.35;
-
-            &::after  {
-                content: 'soon';
-                font-size: 0.55rem;
-                vertical-align: super;
-                margin-left: 2px;
-            }
-        }
-
-        &:not(:disabled, .active):hover {
+        &:not(.active):hover {
             border-color: var(--accent);
             color: var(--accent);
             cursor: pointer;
@@ -335,7 +323,7 @@ header {
         p {
             font-size: 1rem;
             color: var(--text);
-            font-weight: 550;
+            font-weight: 500;
         }
     }
 

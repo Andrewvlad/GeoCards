@@ -6,7 +6,7 @@
     <meta name="author" content="Andrew Vladelshchikov">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <!--Prevent swiped cards from expanding the viewport-->
     <title>GeoCards - Country Flashcards</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
 </head>
 <body>
@@ -161,7 +161,7 @@
             areaMax = deckAreas.at(-1);
 
             // Sync the mode button UI to match
-            document.querySelectorAll('#modeBar button:not(:disabled)')
+            document.querySelectorAll('#modeBar button')
                 .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
 
             // Sync the settings UI to match
@@ -400,7 +400,7 @@
 </script>
 <!--Switch mode buttons-->
 <script>
-    const modeButtons = document.querySelectorAll('#modeBar button:not(:disabled)');
+    const modeButtons = document.querySelectorAll('#modeBar button');
 
     for (const button of modeButtons) {
         button.addEventListener('click', () => {
