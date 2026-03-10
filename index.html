@@ -61,7 +61,7 @@
         </div>
 
     </div>
-    <button id="applyFilters" onclick="applyFilters()">Apply & Restart</button>
+    <button id="applyFilters" onclick="applyFilters()">⟳ Apply Filters</button>
 </div>
 
 <div id="modeBar">
@@ -417,8 +417,20 @@
 <!--Settings panel-->
 <script>
     function toggleSettings() {
-        document.getElementById('settingsPanel').classList.toggle('hidden');
+        const isHidden = document.getElementById('settingsPanel').classList.toggle('hidden');
         document.getElementById('settingsToggle').classList.toggle('active');
+
+        // Reset sliders
+        if (!isHidden) {
+            minPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMin));
+            maxPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMax));
+
+            minAreaSlider.value = areaRangeValues.indexOf(formatArea(areaMin));
+            maxAreaSlider.value = areaRangeValues.indexOf(formatArea(areaMax));
+
+            updatePopRangeUI();
+            updateAreaRangeUI();
+        }
     }
 
     function initSliders() {
@@ -435,10 +447,10 @@
         document.getElementById('maxAreaRangeLabel').textContent = areaRangeValues.at(-1);
 
         popMin = Math.min(...byPopFormatting[populationRangeValues[minPopSlider.value]]);
-        areaMin = Math.min(...byAreaFormatting[areaRangeValues[minAreaSlider.value]]);
+        popMax = Math.max(...byPopFormatting[populationRangeValues[maxPopSlider.value]]);
 
-        updatePopRangeUI();
-        updateAreaRangeUI();
+        areaMin = Math.min(...byAreaFormatting[areaRangeValues[minAreaSlider.value]]);
+        areaMax = Math.max(...byAreaFormatting[areaRangeValues[maxAreaSlider.value]]);
     }
 
     function applyFilters() {
