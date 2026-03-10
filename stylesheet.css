@@ -275,6 +275,54 @@ header {
     margin-top: 0.3rem;
 }
 
+/* Toggle setting */
+.toggleSetting {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--primaryFont);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    cursor: pointer;
+
+    input {
+        display: none;
+    }
+
+    .toggle {
+        width: 36px;
+        height: 20px;
+        background: var(--border);
+        border-radius: 10px;
+        position: relative;
+        transition: background 0.2s;
+        flex-shrink: 0;
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--muted);
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+    }
+
+    input:checked + .toggle {
+        background: var(--accent);
+
+        &::after {
+            left: 18px;
+            background: var(--bg);
+        }
+    }
+}
+
 #applyFilters {
     font-family: var(--primaryFont);
     font-size: 0.72rem;

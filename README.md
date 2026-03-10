@@ -10,7 +10,6 @@ Requires an internet connection to fetch country data from the [REST Countries A
 - Name - Recognize the country by name
 
 ## Features
-- Recycles incorrect cards
 - Auto-saves session, stats, and settings to localStorage
 - Keybindings and gesture controls
     - `[SPACE]` (or tap) - Flip card
@@ -18,6 +17,7 @@ Requires an internet connection to fetch country data from the [REST Countries A
 
 ## Settings
 - Filter countries by population and area
+- Recycle wrong cards
 
 ## TODO
 - [x] Mobile support

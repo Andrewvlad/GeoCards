@@ -61,6 +61,12 @@
         </div>
 
     </div>
+
+    <label class="toggleSetting">
+        <input type="checkbox" id="recycleToggle" onchange="recycle = checked">
+        <span class="toggle"></span>
+        Recycle wrong cards
+    </label>
     <button id="applyFilters" onclick="applyFilters()">⟳ Apply Filters</button>
 </div>
 
@@ -113,6 +119,7 @@
     let countries = []; // Unmodified deck
     let deck = []; // Shuffled and appended deck
     let flipped = false;
+    let recycle = false;
 </script>
 <!--Save progress-->
 <script>
@@ -127,6 +134,7 @@
                 wrong:   wrong.textContent,
                 streak:  streak.textContent,
                 mode:    mode,
+                recycle: recycle,
             }));
         } catch(e) {} // Fail silently if storage full or unavailable
     }
@@ -150,6 +158,7 @@
             wrong.textContent   = data.wrong;
             streak.textContent  = data.streak;
             mode                = data.mode;
+            recycle             = data.recycle ?? false;
 
             // Derive settings from the restored deck
             const deckPops = sortLowToHigh(deck.map(c => c.population));
@@ -165,6 +174,8 @@
                 .forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
 
             // Sync the settings UI to match
+            recycleToggle.checked = recycle;
+
             minPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMin));
             maxPopSlider.value = populationRangeValues.indexOf(formatPopulation(popMax));
             updatePopRangeUI();
@@ -383,8 +394,8 @@
                 if (direction) { // Correct
                     correct.textContent++;
                     streak.textContent++;
-                } else { // Incorrect
-                    deck.push(deck[getIndex()]);
+                } else { // Wrong
+                    if (recycle) deck.push(deck[getIndex()]);
                     wrong.textContent++;
                     streak.textContent = '0';
                 }
