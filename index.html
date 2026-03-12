@@ -18,7 +18,7 @@
         <div id="logo">Geo<span>Cards</span></div>
         <div id="tagline">Country Knowledge Trainer</div>
     </div>
-    <button id="settingsToggle" onclick="toggleSettings()">⚙ Settings</button>
+    <button id="settingsToggle" class="pill" onclick="toggleSettings()">⚙ Settings</button>
 </header>
 
 <div id="settingsPanel" class="hidden">
@@ -67,13 +67,13 @@
         <span class="toggle"></span>
         Recycle wrong cards
     </label>
-    <button id="applyFilters" onclick="applyFilters()">⟳ Apply Filters</button>
+    <button id="applyFilters" class="pill" onclick="applyFilters()">⟳ Apply Filters</button>
 </div>
 
 <div id="modeBar">
-    <button data-mode="flag" class="active">🏳 Flag</button>
-    <button data-mode="name">✏ Name</button>
-    <button data-mode="capital">🏛 Capitals</button>
+    <button data-mode="flag" class="pill active">🏳 Flag</button>
+    <button data-mode="name" class="pill">✏ Name</button>
+    <button data-mode="capital" class="pill">🏛 Capitals</button>
 </div>
 
 <div id="statsBar">
@@ -254,15 +254,12 @@
 </script>
 <script>
     // Constants that get swapped between
-    const frontFlipInfo = '↩ Flip to reveal answer';
-    const backFlipInfo = '↩ Flip back';
-
     const frontActionBar = `<button id="flip" onclick="flipCard()">Reveal Answer</button>`;
     const backActionBar = `<button id="wrong" onclick="grade(false)">✗ Wrong</button><button id="correct" onclick="grade(true)">✓ Correct</button>`;
     const restartActionBar = `<button id="restart" onclick="newDeck()">↺ New Session</button>`;
 
-    const frontKeyboardHints = `<span>← skip</span><span>⌴ flip</span><span class="key">→ skip</span>`;
-    const backKeyboardHints = `<span>← wrong</span><span>⌴ flip</span><span class="key">→ correct</span>`;
+    const frontKeyboardHints = `<span class="skip" onclick="grade(false)">← skip</span><span onclick="flipCard()">⌴ flip</span><span class="skip" onclick="grade(true)">→ skip</span>`;
+    const backKeyboardHints = `<span class="bad" onclick="grade(false)">← wrong</span><span onclick="flipCard()">⌴ flip</span><span class="good" onclick="grade(true)">→ correct</span>`;
 </script>
 <!--Flip card-->
 <script>
@@ -277,7 +274,6 @@
         card.dispatchEvent(new TouchEvent('touchend', {bubbles: true}));
 
         // Update info, action bar, and keyboard hints
-        document.getElementById('flipInfo').textContent    = flipped ? backFlipInfo : frontFlipInfo;
         document.getElementById('actionBar').innerHTML     = flipped ? backActionBar : frontActionBar;
         document.getElementById('keyboardHints').innerHTML = flipped ? backKeyboardHints : frontKeyboardHints;
     }
@@ -314,23 +310,29 @@
         arena.innerHTML = `
             <div id="card">
                 <div class="cardFace front">
-                    <div class="cardNum">${progress.textContent}</div>
-                    <div class="cardLabel">Do you know this country?</div>
+                    <div class="cardInfo">
+                        <div>Do you know this country?</div>
+                        <div>${progress.textContent}</div>
+                    </div>
                     ${faceCard}
+                    <div class="cardInfo"></div>
                 </div>
                 <div class="cardFace back">
-                    <div class="cardNum">${progress.textContent}</div>
-                    <div class="cardLabel">Answer</div>
-                    <img src="${png}" alt="${alt}">
-                    <h1 id="countryName">${common}</h1>
-                    <p id="countryInfo">
-                        ${capital?.length ? capital.join(', ') : 'No capital'} · ${region}${subregion ? ' · ' + subregion : ''}<br>
-                        ${formatPopulation(population) ?? 'Unknown population'}
-                    </p>
+                    <div class="cardInfo">
+                        <div>Answer</div>
+                        <div>${progress.textContent}</div>
+                    </div>
+                    <div class="cardBackContent">
+                        <img src="${png}" alt="${alt}">
+                        <h1 id="countryName">${common}</h1>
+                        <p id="countryInfo">
+                            ${capital?.length ? capital.join(', ') : 'No capital'} · ${region}${subregion ? ' · ' + subregion : ''}<br>
+                            ${formatPopulation(population) ?? 'Unknown population'}
+                        </p>
+                    </div>
                 </div>
             </div>
             <p id="keyboardHints">${frontKeyboardHints}</p>
-            <p id="flipInfo" onclick="flipCard()">${frontFlipInfo}</p>
             <div id="actionBar">${frontActionBar}</div>
         `;
 

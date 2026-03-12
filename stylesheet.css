@@ -16,20 +16,33 @@
 }
 
 /* Color classes */
-.good { color: var(--success) !important; }
-.bad  { color: var(--error)   !important; }
+.skip {color: var(--accent)  !important}
+.good {color: var(--success) !important}
+.bad  {color: var(--error)   !important}
 
-/* Include borders for all measurements */
+/* Shared pill button style */
+.pill {
+    font-family: var(--primaryFont);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
 * {
+    /* Include borders for all measurements */
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 
     /* Disable all highlighting/selection */
     user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
 }
 
 body {
@@ -94,17 +107,6 @@ header {
     #settingsToggle {
         margin-left: auto;
         flex-shrink: 0;
-        font-family: var(--primaryFont);
-        font-size: 0.72rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--muted);
-        border-radius: 3px;
-        cursor: pointer;
-        transition: all 0.2s;
 
         &:hover {
             border-color: var(--accent);
@@ -128,17 +130,6 @@ header {
     flex-wrap: wrap;
 
     button {
-        font-family: var(--primaryFont);
-        font-size: 0.72rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--muted);
-        border-radius: 3px;
-        transition: all 0.2s;
-
         &.active {
             background: var(--accent);
             border-color: var(--accent);
@@ -324,17 +315,8 @@ header {
 }
 
 #applyFilters {
-    font-family: var(--primaryFont);
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--accent);
-    background: transparent;
+    border-color: var(--accent);
     color: var(--accent);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.2s;
     white-space: nowrap;
     margin-left: auto;
 
@@ -440,33 +422,25 @@ header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
     overflow: hidden;
+    padding: 1rem 1.2rem;
 
-    &.back { transform: rotateY(180deg); }
+    &.back {
+        transform: rotateY(180deg);
+    }
 
-    .cardLabel {
-        position: absolute;
-        top: 1rem;
-        left: 1.2rem;
+    .cardInfo {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
         font-family: var(--primaryFont);
         font-size: 0.6rem;
         text-transform: uppercase;
         letter-spacing: 0.15em;
         color: var(--muted);
-        margin-bottom: 0.5rem;
-    }
-
-    .cardNum {
-        position: absolute;
-        top: 1rem;
-        right: 1.2rem;
-        font-family: var(--primaryFont);
-        font-size: 0.6rem;
-        color: var(--muted);
-        margin-bottom: 0.5rem;
     }
 }
 
@@ -475,52 +449,50 @@ img {
     pointer-events: none;
 }
 
+.cardFace img {
+    max-height: 55%;
+    max-width: 80%;
+    border-radius: 4px;
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+}
+
+.cardFace h1 {
+    font-family: var(--titleFont);
+    font-weight: bold;
+    text-align: center;
+}
+
 .cardFace.front {
     img {
-        max-height: 55%;
-        max-width: 80%;
         object-fit: contain;
-        border-radius: 4px;
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
     }
 
     h1 {
-        font-family: var(--titleFont);
         font-size: clamp(1.6rem, 5vw, 3rem);
-        font-weight: bold;
-        text-align: center;
         padding: 1rem 2rem;
         line-height: 1.2;
     }
 }
 
-.cardFace.back {
+.cardFace.back .cardBackContent {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
 
     img {
-        margin-top: 2.5rem; /* Spacing for the card labels */
         min-height: 0;
-        max-height: 55%;
-        max-width: 80%;
-        object-fit: contain;
-        border-radius: 4px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-        margin-bottom: 0.5rem;
     }
 
     h1 {
         margin-top: 0.25rem;
-        font-family: var(--titleFont);
         font-size: clamp(1.2rem, 4vw, 2rem);
-        font-weight: bold;
-        text-align: center;
     }
 
     p {
-        margin-bottom: 1.5rem;
         font-family: var(--primaryFont);
         font-size: 0.7rem;
         color: var(--muted);
@@ -528,54 +500,40 @@ img {
     }
 }
 /* Swipe overlays */
-.skipOverlay {
-    border-color: var(--accent);
+.skipOverlay    {border-color: var(--accent)}
+.correctOverlay {border-color: var(--success)}
+.wrongOverlay   {border-color: var(--error)}
 
-    &::before {
-        content: "";
-        position: absolute;
-        width: 100%; height: 100%;
-        opacity: 0.25;
-        background: linear-gradient(135deg, var(--accent), var(--card));
-    }
+.skipOverlay::after,
+.correctOverlay::after,
+.wrongOverlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.25;
 }
+.skipOverlay::after    {background: linear-gradient(135deg, var(--accent),  var(--card))}
+.correctOverlay::after {background: linear-gradient(135deg, var(--success), var(--card))}
+.wrongOverlay::after   {background: linear-gradient(135deg, var(--error),   var(--card))}
 
-.correctOverlay {
-    border-color: var(--success);
-
-    &::before {
-        content: "";
-        position: absolute;
-        width: 100%; height: 100%;
-        opacity: 0.25;
-        background: linear-gradient(135deg, var(--success), var(--card));
-    }
-}
-
-.wrongOverlay {
-    border-color: var(--error);
-
-    &::before {
-        content: "";
-        position: absolute;
-        width: 100%; height: 100%;
-        opacity: 0.25;
-        background: linear-gradient(135deg, var(--error), var(--card));
-    }
-}
-
-/* Flip info */
-#flipInfo {
+/* Keyboard hints */
+#keyboardHints {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr auto 1fr;
     font-family: var(--primaryFont);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: color 0.2s;
+    letter-spacing: 0.08em;
 
-    &:hover {
-        color: var(--accent);
+    span:last-child {direction: rtl} /* Keeps the arrow on the edge of the card */
+
+    span::first-letter {
+        padding: 0.1rem 0.35rem;
+        margin: 0 1ch;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        color: var(--muted);
     }
 }
 
@@ -611,26 +569,24 @@ img {
         }
     }
 
+    #correct, #wrong {
+        max-width: 180px;
+
+        &:hover {color: var(--text)}
+    }
+
     #correct {
         border-color: var(--success);
         color: var(--success);
-        max-width: 180px;
 
-        &:hover {
-            background: var(--success);
-            color: var(--text);
-        }
+        &:hover {background: var(--success)}
     }
 
     #wrong {
         border-color: var(--error);
         color: var(--error);
-        max-width: 180px;
 
-        &:hover {
-            background: var(--error);
-            color: var(--text);
-        }
+        &:hover {background: var(--error)}
     }
 
     #restart {
@@ -642,28 +598,6 @@ img {
             background: var(--accent);
             color: var(--bg);
         }
-    }
-}
-
-/* Keyboard hints */
-#keyboardHints {
-    display: grid;
-    width: 100%;
-    grid-template-columns: 1fr auto 1fr;
-    font-family: var(--primaryFont);
-    font-size: 0.6rem;
-    color: var(--border);
-    letter-spacing: 0.08em;
-
-    /* Aligns elements evenly, alongside grid */
-    span:last-child {text-align: right;}
-
-    span::first-letter {
-        padding: 0.1rem 0.35rem;
-        margin: 0 1ch;
-        border: 1px solid var(--border);
-        border-radius: 3px;
-        color: var(--muted);
     }
 }
 
@@ -720,32 +654,26 @@ img {
     background: var(--card);
 }
 
-@keyframes slideToastUp {
-    from {
-        translate: 0 15px;
-    }
-}
+@keyframes slideToastUp {from {translate: 0 15px}}
+@keyframes hideToast {to {opacity: 0}}
 
-@keyframes hideToast {
-    to {
-        opacity: 0;
-    }
-}
-
-/* Loading */
-#loadingMessage {
+/* Status messages */
+#loadingMessage, #errorMessage {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
     padding: 4rem;
-    color: var(--muted);
     font-family: var(--primaryFont);
     font-size: 0.8rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+}
 
-    /* Loading spinner*/
+#loadingMessage {
+    color: var(--muted);
+
+    /* Loading spinner */
     &::before {
         content: "";
         width: 32px; height: 32px;
@@ -756,22 +684,6 @@ img {
     }
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+@keyframes spin {to {transform: rotate(360deg)}}
 
-/* Error */
-#errorMessage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 4rem;
-    color: var(--error);
-    font-family: var(--primaryFont);
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
+#errorMessage {color: var(--error)}
