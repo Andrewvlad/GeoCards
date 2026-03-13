@@ -237,13 +237,49 @@
         zoomSnap: 0,
     };
 
+    const BASE_STYLE = {
+        color: "white",
+        weight: 0.3,
+        fillColor: cssVar('--bg'),
+        fillOpacity: 1,
+    };
+
+    const HIGHLIGHT_STYLE = {
+        color: cssVar('--accent'),
+        weight: 1.5,
+        fillColor: cssVar('--accent'),
+        fillOpacity: 0.6,
+    };
+
     let backgroundGeo = null; // Pre-fixed GeoJSON for minimap background
+    const featureByCode = new Map(); // ccn3 -> feature (O(1) lookup)
     let locationMap = null;
     let minimapEl = null; // Persistent DOM element for the map
-    let highlightLayer = null; // Current country highlight layer
+    let highlightLayer = null; // Reusable highlight layer
+    let atlasPromise = null;
+
+    function ensureAtlas() {
+        if (backgroundGeo) return Promise.resolve();
+        atlasPromise ??= fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json')
+            .then(r => r.json())
+            .then(topo => {
+                const geo = topojson.feature(topo, topo.objects.countries);
+                backgroundGeo = {
+                    ...geo,
+                    features: geo.features.map(f => ({
+                        ...f,
+                        geometry: fixAntimeridian(f.geometry)
+                    }))
+                };
+                backgroundGeo.features.forEach(f => {
+                    if (f.id) featureByCode.set(f.id, f);
+                });
+            });
+        return atlasPromise;
+    }
 
     // Find feature whose polygon contains the country's latlng
-    function findFeatureByLatLng(features, latlng, country) {
+    function findFeatureByLatLng(features, latlng) {
         if (!latlng?.length) return null;
         const point = [latlng[1], latlng[0]];
         return features.find(f => pointInGeometry(point, f.geometry)) ?? null;
@@ -262,56 +298,44 @@
         const slot = document.getElementById('minimapSlot');
         if (slot) slot.replaceWith(minimapEl);
 
-        // Create the map once, reuse it on subsequent calls
-        if (!locationMap) {
-            locationMap = L.map(minimapEl, MINIMAP_OPTIONS);
-
-            if (backgroundGeo) {
-                L.geoJSON(backgroundGeo, {
-                    style: {
-                        color: "white",
-                        weight: 0.3,
-                        fillColor: cssVar('--bg'),
-                        fillOpacity: 1,
-                    }
-                }).addTo(locationMap);
+        ensureAtlas().then(() => {
+            // Create the map once, reuse it on subsequent calls
+            if (!locationMap) {
+                locationMap = L.map(minimapEl, MINIMAP_OPTIONS);
+                L.geoJSON(backgroundGeo, { style: BASE_STYLE }).addTo(locationMap);
+                highlightLayer = L.geoJSON(null, { style: HIGHLIGHT_STYLE }).addTo(locationMap);
+                L.control.zoom({position: 'bottomright'}).addTo(locationMap);
             }
 
-            // Add zoom
-            L.control.zoom({position: 'bottomright'}).addTo(locationMap);
-        }
+            // Swap highlight
+            highlightLayer.clearLayers();
 
-        // Swap highlight layer
-        if (highlightLayer) {
-            locationMap.removeLayer(highlightLayer);
-            highlightLayer = null;
-        }
-
-        if (backgroundGeo) {
             // TODO: Attach bounds directly to the countries
-            const target = backgroundGeo.features.find(f => f.id === country.ccn3)
-                || backgroundGeo.features.find(f => f.properties.name == country.name.common) // Fallback if no ccn3 number
-                || findFeatureByLatLng(backgroundGeo.features, country.latlng, country); // Fallback to point-in-polygon
-            if (target) {
-                highlightLayer = L.geoJSON(target, {
-                    style: {
-                        color: cssVar('--accent'),
-                        weight: 1.5,
-                        fillColor: cssVar('--accent'),
-                        fillOpacity: 0.6,
-                    }
-                }).addTo(locationMap);
-            }
-        }
+            const target = featureByCode.get(country.ccn3)
+                || backgroundGeo.features.find(f => f.properties.name === country.name.common) // Fallback if no ccn3 number
+                || findFeatureByLatLng(backgroundGeo.features, country.latlng); // Fallback to point-in-polygon
 
-        // TODO: Solve for incorrect bounding box
-        // TODO: Solve for antartica
-        locationMap.setView(
-            country.latlng,
-            // Zoom to fit country, between lvl 2-4 zoom
-            clamp(locationMap.getBoundsZoom(highlightLayer?.getBounds() ?? [[0,0]]) - 0.5, 2, 4), // Catch for counties without bounds
-            {animate: false}
-        );
+            if (target) highlightLayer.addData(target);
+
+            const raw = target
+                ? highlightLayer.getBounds()
+                : L.latLngBounds([country.latlng, country.latlng]);
+
+            // Clamp bounds so huge countries (Antarctica, Russia) don't zoom out to the world view
+            const MAX_SPAN = 40; // Max degrees of lat/lng the zoom calculation should consider
+            const center = raw.getCenter();
+            console.log(raw.getSouth());
+            const bounds = L.latLngBounds(
+                [Math.max(center.lat - MAX_SPAN / 3, raw.getSouth()), Math.max(center.lng - MAX_SPAN / 3, raw.getWest())],
+                [Math.min(center.lat + MAX_SPAN / 3, raw.getNorth()), Math.min(center.lng + MAX_SPAN / 3, raw.getEast())]
+            );
+
+            locationMap.setView(
+                country.latlng,
+                clamp(locationMap.getBoundsZoom(bounds) - 0.5, 2, 4), // Zoom to fit country, between lvl 2-4
+                {animate: false}
+            );
+        });
     }
 </script>
 <!--Load country data-->
@@ -321,26 +345,9 @@
     let byPopFormatting; // Mapping of all pop values that belong to a single formatted population
     let byAreaFormatting; // Mapping of all area values that belong to a single formatted area
 
-    Promise.all([
-        fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,ccn3,capital,population,region,subregion,latlng,area')
-            .then(r => r.json()),
-        // TODO: Fetch only on location mode
-        fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json')
-            .then(r => r.json())
-    ])
-        .then(([json, topo]) => {
-            countries = json;
-            const allCountriesGeo = topojson.feature(topo, topo.objects.countries);
-
-            // Pre-fix antimeridian
-            backgroundGeo = {
-                ...allCountriesGeo,
-                features: allCountriesGeo.features.map(f => ({
-                    ...f,
-                    geometry: fixAntimeridian(f.geometry)
-                }))
-            };
-        })
+    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,ccn3,capital,population,region,subregion,latlng,area')
+        .then(r => r.json())
+        .then(json => countries = json)
         .then(() => {
             populationRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.population)).map(formatPopulation))];
             areaRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.area)).map(formatArea))];
