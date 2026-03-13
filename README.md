@@ -8,12 +8,14 @@ Requires an internet connection to fetch country data from the [REST Countries A
 ## Modes
 - Flag - Recognize the country by flag
 - Name - Recognize the country by name
+- Capital - Recognize the country by capital city/cities
+- Location - Recognize the country by geographic location
 
 ## Features
 - Auto-saves session, stats, and settings to localStorage
 - Keybindings and gesture controls
     - `[SPACE]` (or tap) - Flip card
-    - `[←]`/`[→]` (or swipe) - Mark wrong/correct
+    - `[←]`/`[→]` (or swipe) - Mark wrong/correct/skip
 
 ## Settings
 - Filter countries by population and area
@@ -29,3 +31,8 @@ Requires an internet connection to fetch country data from the [REST Countries A
 - [x] Population filter
 - [ ] -dles (daily) mode
 - [ ] Downloadable file with internal CSS
+
+# Disclaimer
+I do not manage the borders, nor sovereignty of the countries.
+Those are managed by the APIs in use themselves.
+Feel free to fork to match your political beliefs.

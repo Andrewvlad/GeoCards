@@ -8,7 +8,8 @@
     <title>GeoCards - Country Flashcards</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script></head>
 <body>
 
 
@@ -74,6 +75,7 @@
     <button data-mode="flag" class="pill active">🏳 Flag</button>
     <button data-mode="name" class="pill">✏ Name</button>
     <button data-mode="capital" class="pill">🏛 Capitals</button>
+    <button data-mode="location" class="pill">🗺 Location</button>
 </div>
 
 <div id="statsBar">
@@ -220,6 +222,98 @@
         nextCard();
     }
 </script>
+<!--Country location rendering (Leaflet map + world-atlas boundaries)-->
+<script>
+    const MINIMAP_OPTIONS = {
+        zoomControl: false, // Defined later in order to put in bottom-right corner
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: true,
+        boxZoom: false,
+        keyboard: false,
+        minZoom: 1,
+        zoomSnap: 0,
+    };
+
+    let backgroundGeo = null; // Pre-fixed GeoJSON for minimap background
+    let locationMap = null;
+    let minimapEl = null; // Persistent DOM element for the map
+    let highlightLayer = null; // Current country highlight layer
+
+    // Find feature whose polygon contains the country's latlng
+    function findFeatureByLatLng(features, latlng, country) {
+        if (!latlng?.length) return null;
+        const point = [latlng[1], latlng[0]];
+        return features.find(f => pointInGeometry(point, f.geometry)) ?? null;
+    }
+
+    function initMinimap(country) {
+        if (!country.latlng?.length) return;
+
+        // Create persistent container on first call
+        if (!minimapEl) {
+            minimapEl = document.createElement('div');
+            minimapEl.id = 'locationMinimap';
+        }
+
+        // Move persistent element into the card's placeholder
+        const slot = document.getElementById('minimapSlot');
+        if (slot) slot.replaceWith(minimapEl);
+
+        // Create the map once, reuse it on subsequent calls
+        if (!locationMap) {
+            locationMap = L.map(minimapEl, MINIMAP_OPTIONS);
+
+            if (backgroundGeo) {
+                L.geoJSON(backgroundGeo, {
+                    style: {
+                        color: "white",
+                        weight: 0.3,
+                        fillColor: cssVar('--bg'),
+                        fillOpacity: 1,
+                    }
+                }).addTo(locationMap);
+            }
+
+            // Add zoom
+            L.control.zoom({position: 'bottomright'}).addTo(locationMap);
+        }
+
+        // Swap highlight layer
+        if (highlightLayer) {
+            locationMap.removeLayer(highlightLayer);
+            highlightLayer = null;
+        }
+
+        if (backgroundGeo) {
+            // TODO: Attach bounds directly to the countries
+            const target = backgroundGeo.features.find(f => f.id === country.ccn3)
+                || backgroundGeo.features.find(f => f.properties.name == country.name.common) // Fallback if no ccn3 number
+                || findFeatureByLatLng(backgroundGeo.features, country.latlng, country); // Fallback to point-in-polygon
+            if (target) {
+                highlightLayer = L.geoJSON(target, {
+                    style: {
+                        color: cssVar('--accent'),
+                        weight: 1.5,
+                        fillColor: cssVar('--accent'),
+                        fillOpacity: 0.6,
+                    }
+                }).addTo(locationMap);
+            }
+        }
+
+        // TODO: Solve for incorrect bounding box
+        // TODO: Solve for antartica
+        locationMap.setView(
+            country.latlng,
+            // Zoom to fit country, between lvl 2-4 zoom
+            clamp(locationMap.getBoundsZoom(highlightLayer?.getBounds() ?? [[0,0]]) - 0.5, 2, 4), // Catch for counties without bounds
+            {animate: false}
+        );
+    }
+</script>
 <!--Load country data-->
 <script>
     let populationRangeValues; // Idx to value used for sliders (unique, formatted populations)
@@ -227,9 +321,26 @@
     let byPopFormatting; // Mapping of all pop values that belong to a single formatted population
     let byAreaFormatting; // Mapping of all area values that belong to a single formatted area
 
-    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,capital,population,area,region,subregion')
-        .then(response => response.json())
-        .then(json => countries = json)
+    Promise.all([
+        fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,ccn3,capital,population,region,subregion,latlng,area')
+            .then(r => r.json()),
+        // TODO: Fetch only on location mode
+        fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json')
+            .then(r => r.json())
+    ])
+        .then(([json, topo]) => {
+            countries = json;
+            const allCountriesGeo = topojson.feature(topo, topo.objects.countries);
+
+            // Pre-fix antimeridian
+            backgroundGeo = {
+                ...allCountriesGeo,
+                features: allCountriesGeo.features.map(f => ({
+                    ...f,
+                    geometry: fixAntimeridian(f.geometry)
+                }))
+            };
+        })
         .then(() => {
             populationRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.population)).map(formatPopulation))];
             areaRangeValues = [...new Set(sortLowToHigh(countries.map(c => c.area)).map(formatArea))];
@@ -305,6 +416,8 @@
                 case 'name': return `<h1>${common}</h1>`;
                 // TODO: Filter out countries without a capital city (ex. Heard Island and McDonald Islands)
                 case 'capital': return `<h1>${capital?.length ? capital.join(', ') : 'No capital'}</h1>`;
+                // TODO: Filter out countries not part of world-atlas
+                case 'location': return `<div id="minimapSlot"></div>`;
             }})();
 
         arena.innerHTML = `
@@ -336,6 +449,7 @@
             <div id="actionBar">${frontActionBar}</div>
         `;
 
+        if (mode === 'location') initMinimap(deck[getIndex()]);
         attachSwipe();
     }
 </script>
