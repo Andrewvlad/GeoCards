@@ -10,10 +10,10 @@ Requires an internet connection to fetch country data from the [REST Countries A
 | ![info_example.png](.github/media/info_example.png "Card back example") | ![correct_example.png](.github/media/correct_example.png "Card correct example") |
 
 ## Modes
+- Location - Recognize the country by geographic location
 - Flag - Recognize the country by flag
 - Name - Recognize the country by name
 - Capital - Recognize the country by capital city/cities
-- Location - Recognize the country by geographic location
 
 ## Features
 - Auto-saves session, stats, and settings to localStorage

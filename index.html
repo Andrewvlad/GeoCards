@@ -72,10 +72,10 @@
 </div>
 
 <div id="modeBar">
-    <button data-mode="flag" class="pill active">🏳 Flag</button>
+    <button data-mode="location" class="pill active">🗺 Location</button>
+    <button data-mode="flag" class="pill">🏳 Flag</button>
     <button data-mode="name" class="pill">✏ Name</button>
     <button data-mode="capital" class="pill">🏛 Capitals</button>
-    <button data-mode="location" class="pill">🗺 Location</button>
 </div>
 
 <div id="statsBar">
@@ -117,7 +117,7 @@
     const getIndex = () => +correct.textContent + +wrong.textContent;
 
     // Initialize state
-    let mode = 'flag';
+    let mode = 'location';
     let countries = []; // Unmodified deck
     let deck = []; // Shuffled and appended deck
     let flipped = false;
@@ -419,12 +419,12 @@
 
         const faceCard = (() => {
             switch (mode) {
+                // TODO: Filter out countries not part of world-atlas
+                case 'location': return `<div id="minimapSlot"></div>`;
                 case 'flag': return `<img src="${png}" alt="${alt}">`;
                 case 'name': return `<h1>${common}</h1>`;
                 // TODO: Filter out countries without a capital city (ex. Heard Island and McDonald Islands)
                 case 'capital': return `<h1>${capital?.length ? capital.join(', ') : 'No capital'}</h1>`;
-                // TODO: Filter out countries not part of world-atlas
-                case 'location': return `<div id="minimapSlot"></div>`;
             }})();
 
         arena.innerHTML = `
