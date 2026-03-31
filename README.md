@@ -5,6 +5,10 @@ I've always wanted to be more knowledgeable about countries, so I decided to mak
 Hosted [here](https://andrewvlad.github.io/GeoCards/) on GitHub.
 Requires an internet connection to fetch country data from the [REST Countries API](https://restcountries.com).
 
+|![map_example.png](.github/media/map_example.png "title-1")|![skip_example.png](.github/media/skip_example.png)|
+|-|-|
+|![info_example.png](.github/media/info_example.png)|![correct_example.png](.github/media/correct_example.png)|
+
 ## Modes
 - Flag - Recognize the country by flag
 - Name - Recognize the country by name
