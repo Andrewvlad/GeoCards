@@ -5,9 +5,9 @@ I've always wanted to be more knowledgeable about countries, so I decided to mak
 Hosted [here](https://andrewvlad.github.io/GeoCards/) on GitHub.
 Requires an internet connection to fetch country data from the [REST Countries API](https://restcountries.com).
 
-|![map_example.png](.github/media/map_example.png "title-1")|![skip_example.png](.github/media/skip_example.png)|
-|-|-|
-|![info_example.png](.github/media/info_example.png)|![correct_example.png](.github/media/correct_example.png)|
+| ![map_example.png](.github/media/map_example.png "Map mode example")    | ![skip_example.png](.github/media/skip_example.png "Card skip example")          |
+|-------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| ![info_example.png](.github/media/info_example.png "Card back example") | ![correct_example.png](.github/media/correct_example.png "Card correct example") |
 
 ## Modes
 - Flag - Recognize the country by flag
@@ -35,6 +35,13 @@ Requires an internet connection to fetch country data from the [REST Countries A
 - [x] Population filter
 - [ ] -dles (daily) mode
 - [ ] Downloadable file with internal CSS
+
+## Overview
+The app runs entirely clientside using HTML/CSS/JS.
+Country data is fetched from the [REST Countries](https://restcountries.com/) API.
+Borders are rendered on a [Leaflet](https://leafletjs.com/) map using [Natural Earth](https://www.naturalearthdata.com/downloads/)'s vector data.
+Progress and settings are saved using localstorage. 
+Card swiping is supported for both mobile touch gestures and desktop dragging.
 
 # Disclaimer
 I do not manage the borders, nor sovereignty of the countries.
