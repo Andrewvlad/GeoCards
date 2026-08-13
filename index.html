@@ -345,7 +345,7 @@
     let byPopFormatting; // Mapping of all pop values that belong to a single formatted population
     let byAreaFormatting; // Mapping of all area values that belong to a single formatted area
 
-    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,ccn3,capital,population,region,subregion,latlng,area')
+    fetch('countries.json') // Vendored and refreshed nightly, see scripts/build-countries.py
         .then(r => r.json())
         .then(json => countries = json)
         .then(() => {
@@ -367,7 +367,7 @@
         })
         .then(() => loadSession() ? nextCard(): newDeck())
         .catch(() => document.getElementById('arena').innerHTML =
-            `<p id="errorMessage">Failed to load countries. Check your connection.</p>`
+            `<p id="errorMessage">Failed to load countries. Try reloading the page.</p>`
         );
 </script>
 <script>
@@ -447,7 +447,7 @@
                         <h1 id="countryName">${common}</h1>
                         <p id="countryInfo">
                             ${capital?.length ? capital.join(', ') : 'No capital'} · ${region}${subregion ? ' · ' + subregion : ''}<br>
-                            ${formatPopulation(population) ?? 'Unknown population'}
+                            ${formatPopulation(population)}
                         </p>
                     </div>
                 </div>

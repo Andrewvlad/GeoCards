@@ -3,7 +3,6 @@ A free flashcard app to learn countries.
 
 I've always wanted to be more knowledgeable about countries, so I decided to make a lightweight game out of it!
 Hosted [here](https://andrewvlad.github.io/GeoCards/) on GitHub.
-Requires an internet connection to fetch country data from the [REST Countries API](https://restcountries.com).
 
 | ![map_example.png](.github/media/map_example.png "Map mode example")    | ![skip_example.png](.github/media/skip_example.png "Card skip example")          |
 |-------------------------------------------------------------------------|----------------------------------------------------------------------------------|
@@ -38,12 +37,14 @@ Requires an internet connection to fetch country data from the [REST Countries A
 
 ## Overview
 The app runs entirely clientside using HTML/CSS/JS.
-Country data is fetched from the [REST Countries](https://restcountries.com/) API.
+Country data is served from `countries.json`, built by `scripts/build-countries.py` from
+[mledoze/countries](https://github.com/mledoze/countries) and [Wikidata](https://www.wikidata.org/) populations, with flags from [flagcdn](https://flagcdn.com/).
+A nightly GitHub Action regenerates it, so the app itself depends on no third-party API at runtime.
 Borders are rendered on a [Leaflet](https://leafletjs.com/) map using [Natural Earth](https://www.naturalearthdata.com/downloads/)'s vector data.
 Progress and settings are saved using localstorage. 
 Card swiping is supported for both mobile touch gestures and desktop dragging.
 
 # Disclaimer
 I do not manage the borders, nor sovereignty of the countries.
-Those are managed by the APIs in use themselves.
+Those are managed by the upstream data sources themselves.
 Feel free to fork to match your political beliefs.
